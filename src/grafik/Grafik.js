@@ -125,6 +125,101 @@ export default function Grafik() {
         ]
     });
 
+    const [nitrogenData, setNitrogenData] = useState({
+        labels: [],
+        datasets: [
+            {
+                label: 'Nitrogen',
+                data: [],
+                backgroundColor: 'transparent',
+                borderColor: "#77E4C8",
+                pointBorderColor: '#77E4C8',
+                pointBackgroundColor: '#77E4C8',
+                pointBorderWidth: 1,
+                fill: false
+            }
+        ]
+    });
+
+    const [nitrogenData2, setNitrogenData2] = useState({
+      labels: [],
+      datasets: [
+          {
+              label: 'Nitrogen',
+              data: [],
+              backgroundColor: 'transparent',
+              borderColor: "#77E4C8",
+              pointBorderColor: '#77E4C8',
+              pointBackgroundColor: '#77E4C8',
+              pointBorderWidth: 1,
+              fill: false
+          }
+      ]
+  });
+
+  const [fosforData, setFosforData] = useState({
+    labels: [],
+    datasets: [
+        {
+            label: 'Fosfor',
+            data: [],
+            backgroundColor: 'transparent',
+            borderColor: "#A0DEFF",
+            pointBorderColor: '#A0DEFF',
+            pointBackgroundColor: '#A0DEFF',
+            pointBorderWidth: 1,
+            fill: false
+        }
+    ]
+});
+
+const [fosforData2, setFosforData2] = useState({
+  labels: [],
+  datasets: [
+      {
+          label: 'Fosfor',
+          data: [],
+          backgroundColor: 'transparent',
+          borderColor: "#A0DEFF",
+          pointBorderColor: '#A0DEFF',
+          pointBackgroundColor: '#A0DEFF',
+          pointBorderWidth: 1,
+          fill: false
+      }
+  ]
+});
+
+const [kaliumData, setKaliumData] = useState({
+    labels: [],
+    datasets: [
+        {
+            label: 'Fosfor',
+            data: [],
+            backgroundColor: 'transparent',
+            borderColor: "#A0DEFF",
+            pointBorderColor: '#A0DEFF',
+            pointBackgroundColor: '#A0DEFF',
+            pointBorderWidth: 1,
+            fill: false
+        }
+    ]
+});
+
+const [kaliumData2, setKaliumData2] = useState({
+  labels: [],
+  datasets: [
+      {
+          label: 'Fosfor',
+          data: [],
+          backgroundColor: 'transparent',
+          borderColor: "#A0DEFF",
+          pointBorderColor: '#A0DEFF',
+          pointBackgroundColor: '#A0DEFF',
+          pointBorderWidth: 1,
+          fill: false
+      }
+  ]
+});
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -140,20 +235,48 @@ export default function Grafik() {
         const phRef = ref(db, 'data/pH tanah');
         const kelembapanRef = ref(db, 'data/Kelembapan Tanah');
         const suhuRef = ref(db, 'data/suhu');
+
         const pompaRef = ref(db, 'data/pompa');
 
         const phRef2 = ref(db, 'data/pH tanah');
         const kelembapanRef2 = ref(db, 'data/Kelembapan Tanah');
         const suhuRef2 = ref(db, 'data/suhu');
 
+        const nitrogenRef = ref(db, 'data/n');
+        const fosforRef = ref(db, 'data/p');
+        const kaliumRef = ref(db, 'data/k');
+        
+        const nitrogenRef2 = ref(db, 'data/n');
+        const fosforRef2 = ref(db, 'data/p');
+        const kaliumRef2 = ref(db, 'data/k');
+        
+
         onValue(phRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const phDataItems = Object.keys(data).map(key => ({
-                    x: data[key].timestamp.slice(-8),
-                    y: data[key].value
-                })).slice(-10);
-
+                const groupedData = {};
+        
+                Object.keys(data).forEach(key => {
+                    const date = data[key].timestamp.slice(0, 10); // Mengambil tanggal (YYYY-MM-DD)
+                    if (!date.startsWith('1970')) { // Menghindari tanggal 1970
+                        if (!groupedData[date]) {
+                            groupedData[date] = [];
+                        }
+                        groupedData[date].push(data[key].value);
+                    }
+                });
+        
+                const phDataItems = Object.keys(groupedData)
+                    .map(date => {
+                        const values = groupedData[date];
+                        const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+                        return {
+                            x: date,
+                            y: avgValue
+                        };
+                    })
+                    .slice(-10); // Mengambil 10 data terbaru
+        
                 setPhData2({
                     labels: phDataItems.map(item => item.x),
                     datasets: [
@@ -161,9 +284,9 @@ export default function Grafik() {
                             label: 'pH',
                             data: phDataItems.map(item => item.y),
                             backgroundColor: 'transparent',
-                            borderColor: "#A0DEFF",
-                            pointBorderColor: '#A0DEFF',
-                            pointBackgroundColor: '#A0DEFF',
+                            borderColor: "#402E7A",
+                            pointBorderColor: '#FEB941',
+                            pointBackgroundColor: '#FEB941',
                             pointBorderWidth: 1,
                             fill: false
                         }
@@ -171,7 +294,7 @@ export default function Grafik() {
                 });
             }
         });
-
+                
         onValue(phRef2, (snapshot) => {
           const data = snapshot.val();
           if (data) {
@@ -196,7 +319,7 @@ export default function Grafik() {
                   ]
               });
           }
-      });
+        });
 
         onValue(kelembapanRef, (snapshot) => {
             const data = snapshot.val();
@@ -227,11 +350,39 @@ export default function Grafik() {
         onValue(kelembapanRef2, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const kelembapanDataItems2 = Object.keys(data).map(key => ({
-                    x: data[key].timestamp.slice(-8),
-                    y: data[key].value
-                })).slice(-10);
-
+                const groupedData = {};
+                
+                Object.keys(data).forEach(key => {
+                    const timestamp = data[key].timestamp;
+                    const date = timestamp.slice(0, 10); // Ambil tanggal
+                    let hour = timestamp.slice(11, 13); // Ambil jam
+                    
+                    // Tambahkan nol di depan jika jam hanya satu digit
+                    hour = hour.padStart(2, '0');
+                
+                    // Pastikan tanggal tidak dimulai dengan 1970
+                    if (!date.startsWith('1970')) {
+                        // Buat key untuk pengelompokan per 3 jam
+                        const threeHourKey = `${date}-${Math.floor(parseInt(hour) / 3) * 3}:00`;
+                
+                        if (!groupedData[threeHourKey]) {
+                            groupedData[threeHourKey] = [];
+                        }
+                        groupedData[threeHourKey].push(data[key].value);
+                    }
+                });
+                
+                const kelembapanDataItems2 = Object.keys(groupedData)
+                    .map(key => {
+                        const values = groupedData[key];
+                        const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+                        return {
+                            x: key, // Gunakan key yang menyimpan informasi tanggal dan jam
+                            y: avgValue
+                        };
+                    })
+                    .slice(-10); // Mengambil 10 data terbaru
+                
                 setKelembapanData2({
                     labels: kelembapanDataItems2.map(item => item.x),
                     datasets: [
@@ -239,9 +390,9 @@ export default function Grafik() {
                             label: 'Kelembapan',
                             data: kelembapanDataItems2.map(item => item.y),
                             backgroundColor: 'transparent',
-                            borderColor: "#0E46A3",
-                            pointBorderColor: '#0E46A3',
-                            pointBackgroundColor: '#0E46A3',
+                            borderColor: "#4C3BCF",
+                            pointBorderColor: '#FC4100',
+                            pointBackgroundColor: '#FC4100',
                             pointBorderWidth: 1,
                             fill: false
                         }
@@ -249,7 +400,7 @@ export default function Grafik() {
                 });
             }
         });
-
+        
         onValue(suhuRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -279,21 +430,46 @@ export default function Grafik() {
         onValue(suhuRef2, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const suhuDataItems2 = Object.keys(data).map(key => ({
-                    x: data[key].timestamp.slice(-8),
-                    y: data[key].value
-                })).slice(-10);
-
+                const groupedData = {};
+        
+                Object.keys(data).forEach(key => {
+                    const timestamp = data[key].timestamp;
+                    const date = timestamp.slice(0, 10); // Ambil tanggal
+                    const hour = timestamp.slice(11, 13); // Ambil jam
+        
+                    // Pastikan tanggal tidak dimulai dengan 1970
+                    if (!date.startsWith('1970')) {
+                        // Buat key untuk pengelompokan per 3 jam
+                        const threeHourKey = `${date}-${Math.floor(parseInt(hour) / 3) * 3}:00`;
+        
+                        if (!groupedData[threeHourKey]) {
+                            groupedData[threeHourKey] = [];
+                        }
+                        groupedData[threeHourKey].push(data[key].value);
+                    }
+                });
+        
+                const kelembapanDataItems2 = Object.keys(groupedData)
+                    .map(key => {
+                        const values = groupedData[key];
+                        const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+                        return {
+                            x: key, // Gunakan key yang menyimpan informasi tanggal dan jam
+                            y: avgValue
+                        };
+                    })
+                    .slice(-10); // Mengambil 10 data terbaru
+        
                 setSuhuData2({
-                    labels: suhuDataItems2.map(item => item.x),
+                    labels: kelembapanDataItems2.map(item => item.x),
                     datasets: [
                         {
-                            label: 'Suhu',
-                            data: suhuDataItems2.map(item => item.y),
+                            label: 'Kelembapan',
+                            data: kelembapanDataItems2.map(item => item.y),
                             backgroundColor: 'transparent',
-                            borderColor: "#5755FE",
-                            pointBorderColor: '#5755FE',
-                            pointBackgroundColor: '#5755FE',
+                            borderColor: "#3ABEF9",
+                            pointBorderColor: '#F6995C',
+                            pointBackgroundColor: '#F6995C',
                             pointBorderWidth: 1,
                             fill: false
                         }
@@ -301,6 +477,217 @@ export default function Grafik() {
                 });
             }
         });
+
+        onValue(nitrogenRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const groupedData = {};
+        
+                Object.keys(data).forEach(key => {
+                    const date = data[key].timestamp.slice(0, 10); // Mengambil tanggal (YYYY-MM-DD)
+                    if (!date.startsWith('1970')) { // Menghindari tanggal 1970
+                        if (!groupedData[date]) {
+                            groupedData[date] = [];
+                        }
+                        groupedData[date].push(data[key].value);
+                    }
+                });
+        
+                const nitrogenDataItems = Object.keys(groupedData)
+                    .map(date => {
+                        const values = groupedData[date];
+                        const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+                        return {
+                            x: date,
+                            y: avgValue
+                        };
+                    })
+                    .slice(-10); // Mengambil 10 data terbaru
+        
+                setNitrogenData2({
+                    labels: nitrogenDataItems.map(item => item.x),
+                    datasets: [
+                        {
+                            label: 'Nitrogen',
+                            data: nitrogenDataItems.map(item => item.y),
+                            backgroundColor: 'transparent',
+                            borderColor: "#059212",
+                            pointBorderColor: '#F4CE14',
+                            pointBackgroundColor: '#F4CE14',
+                            pointBorderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                });
+            }
+        });
+
+        onValue(nitrogenRef2, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const nitrogenDataItems2 = Object.keys(data).map(key => ({
+                    x: data[key].timestamp.slice(0,20),
+                    y: data[key].value
+                }));
+  
+                setNitrogenData({
+                    labels: nitrogenDataItems2.map(item => item.x),
+                    datasets: [
+                        {
+                            label: 'Nitrogen',
+                            data: nitrogenDataItems2.map(item => item.y),
+                            backgroundColor: 'transparent',
+                            borderColor: "#A0DEFF",
+                            pointBorderColor: '#A0DEFF',
+                            pointBackgroundColor: '#A0DEFF',
+                            pointBorderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                });
+            }
+          });
+
+          onValue(fosforRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const kelembapanDataItems = Object.keys(data).map(key => ({
+                    x: data[key].timestamp.slice(-8),
+                    y: data[key].value
+                }));
+
+                setFosforData({
+                    labels: kelembapanDataItems.map(item => item.x),
+                    datasets: [
+                        {
+                            label: 'Fosfor',
+                            data: kelembapanDataItems.map(item => item.y),
+                            backgroundColor: 'transparent',
+                            borderColor: "#03AED2",
+                            pointBorderColor: '#03AED2',
+                            pointBackgroundColor: '#03AED2',
+                            pointBorderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                });
+            }
+        });
+
+        onValue(fosforRef2, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const groupedData = {};
+        
+                Object.keys(data).forEach(key => {
+                    const date = data[key].timestamp.slice(0, 10);
+                    if (!date.startsWith('1970')) { 
+                        if (!groupedData[date]) {
+                            groupedData[date] = [];
+                        }
+                        groupedData[date].push(data[key].value);
+                    }
+                });
+        
+                const kelembapanDataItems2 = Object.keys(groupedData)
+                    .map(date => {
+                        const values = groupedData[date];
+                        const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+                        return {
+                            x: date,
+                            y: avgValue
+                        };
+                    })
+                    .slice(-10); // Mengambil 10 data terbaru
+        
+                setFosforData2({
+                    labels: kelembapanDataItems2.map(item => item.x),
+                    datasets: [
+                        {
+                            label: 'Fosfor',
+                            data: kelembapanDataItems2.map(item => item.y),
+                            backgroundColor: 'transparent',
+                            borderColor: "#9BEC00",
+                            pointBorderColor: '#FD9B63',
+                            pointBackgroundColor: '#FD9B63',
+                            pointBorderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                });
+            }
+        });
+
+        onValue(kaliumRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const kelembapanDataItems = Object.keys(data).map(key => ({
+                    x: data[key].timestamp.slice(-8),
+                    y: data[key].value
+                }));
+
+                setKaliumData({
+                    labels: kelembapanDataItems.map(item => item.x),
+                    datasets: [
+                        {
+                            label: 'Kalium',
+                            data: kelembapanDataItems.map(item => item.y),
+                            backgroundColor: 'transparent',
+                            borderColor: "#0E46A3",
+                            pointBorderColor: '#0E46A3',
+                            pointBackgroundColor: '#0E46A3',
+                            pointBorderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                });
+            }
+        });
+
+        onValue(kaliumRef2, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const groupedData = {};
+        
+                Object.keys(data).forEach(key => {
+                    const date = data[key].timestamp.slice(0, 10);
+                    if (!date.startsWith('1970')) { 
+                        if (!groupedData[date]) {
+                            groupedData[date] = [];
+                        }
+                        groupedData[date].push(data[key].value);
+                    }
+                });
+        
+                const kelembapanDataItems2 = Object.keys(groupedData)
+                    .map(date => {
+                        const values = groupedData[date];
+                        const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+                        return {
+                            x: date,
+                            y: avgValue
+                        };
+                    })
+                    .slice(-10); // Mengambil 10 data terbaru
+        
+                setKaliumData2({
+                    labels: kelembapanDataItems2.map(item => item.x),
+                    datasets: [
+                        {
+                            label: 'Kalium',
+                            data: kelembapanDataItems2.map(item => item.y),
+                            backgroundColor: 'transparent',
+                            borderColor: "#8DECB4",
+                            pointBorderColor: '#141E46',
+                            pointBackgroundColor: '#141E46',
+                            pointBorderWidth: 1,
+                            fill: false
+                        }
+                    ]
+                });
+            }
+        });
+
 
         onValue(pompaRef, (snapshot) => {
           const data = snapshot.val();
@@ -311,7 +698,7 @@ export default function Grafik() {
               }));
               setPompaHistory(pompaData);
           }
-      });
+        });
     }, []);
 
     useEffect(() => {
@@ -405,27 +792,177 @@ export default function Grafik() {
         }
     };
 
-    const filteredData = phData.labels
+    const nitrogenOptions = {
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+        scales: {
+            x: [{
+                gridLines: {
+                    display: false,
+                    color: "black"
+                },
+                scaleLabel: {
+                    display: true,
+                    labelString: "time",
+                    fontColor: "red"
+                }
+            }],
+            y: {
+                title: {
+                    display: true,
+                    text: 'Nitrogen'
+                },
+                type: 'linear',
+                position: 'left'
+            }
+        }
+    };
+
+    const fosforOptions = {
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+        scales: {
+            x: [{
+                gridLines: {
+                    display: false,
+                    color: "black"
+                },
+                scaleLabel: {
+                    display: true,
+                    labelString: "time",
+                    fontColor: "red"
+                }
+            }],
+            y: {
+                title: {
+                    display: true,
+                    text: 'Fosfor'
+                },
+                type: 'linear',
+                position: 'left'
+            }
+        }
+    };
+
+    const kaliumOptions = {
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+        scales: {
+            x: [{
+                gridLines: {
+                    display: false,
+                    color: "black"
+                },
+                scaleLabel: {
+                    display: true,
+                    labelString: "time",
+                    fontColor: "red"
+                }
+            }],
+            y: {
+                title: {
+                    display: true,
+                    text: 'Kalium'
+                },
+                type: 'linear',
+                position: 'left'
+            }
+        }
+    };
+
+    const filteredData = phData2.labels
     .map((label, index) => ({
         timestamp: label,
         ph: phData.datasets[0].data[index],
-        kelembapan: kelembapanData.datasets[0].data[index],
-        suhu: suhuData.datasets[0].data[index]
+        nitrogen: nitrogenData.datasets[0].data[index],
+        fosfor: fosforData.datasets[0].data[index],
+        kalium: kaliumData.datasets[0].data[index]
     }))
-    .filter(item => isNumber(item.ph) && isNumber(item.kelembapan) && isNumber(item.suhu))
+    .filter(item => isNumber(item.ph) && isNumber(item.nitrogen) && isNumber(item.fosfor) && isNumber(item.kalium))
+    .reduce((acc, item) => {
+        const existingEntry = acc.find(entry => entry.timestamp.slice(0, 10) === item.timestamp.slice(0, 10));
+        if (existingEntry) {
+            existingEntry.ph += item.ph;
+            existingEntry.nitrogen += item.nitrogen;
+            existingEntry.fosfor += item.fosfor;
+            existingEntry.kalium += item.kalium;
+            existingEntry.count++;
+        } else {
+            acc.push({
+                timestamp: item.timestamp.slice(0, 10),
+                ph: item.ph,
+                nitrogen: item.nitrogen,
+                fosfor: item.fosfor,
+                kalium: item.kalium,
+                count: 1
+            });
+        }
+        return acc;
+    }, [])
+    .map(entry => ({
+        timestamp: entry.timestamp,
+        ph: parseFloat((entry.ph / entry.count).toFixed(2)),
+        nitrogen: parseFloat((entry.nitrogen / entry.count).toFixed(2)),
+        fosfor: parseFloat((entry.fosfor / entry.count).toFixed(2)),
+        kalium: parseFloat((entry.kalium / entry.count).toFixed(2)),
+    }))
     .filter(item =>
-        item.timestamp.slice(0, 10).includes(searchTerm) // Change here to filter by first 10 characters of timestamp
-    );
+        item.timestamp.includes(searchTerm)
+    )
+    .reverse();
 
-    filteredData.reverse();
+    
+    const filteredPompaData = suhuData2.labels
+    .map((label, index) => ({
+        timestamp: label,
+        kelembapan: kelembapanData.datasets[0].data[index],
+        suhu: suhuData.datasets[0].data[index],
+        status: pompaHistory[index] // Tambahkan status jika tersedia
+    }))
+    .filter(item => isNumber(item.kelembapan) && isNumber(item.suhu))
+    .reduce((acc, item) => {
+        const existingEntry = acc.find(entry => 
+            typeof entry.timestamp === 'string' && 
+            typeof item.timestamp === 'string' &&
+            entry.timestamp === item.timestamp
+        );
+        if (existingEntry) {
+            existingEntry.kelembapan.push(item.kelembapan);
+            existingEntry.suhu.push(item.suhu);
+            // Update status jika ada perubahan atau jika status bisa di-set rata-rata
+            existingEntry.status = item.status;
+        } else {
+            acc.push({
+                timestamp: item.timestamp,
+                status: item.status, // Pastikan status ditambahkan di sini
+                kelembapan: [item.kelembapan],
+                suhu: [item.suhu],
+            });
+        }
+        return acc;
+    }, [])
+    .map(entry => ({
+        timestamp: entry.timestamp,
+        status: entry.status, // Pastikan status ditampilkan
+        kelembapan: parseFloat((entry.kelembapan.reduce((a, b) => a + b, 0) / entry.kelembapan.length).toFixed(2)),
+        suhu: parseFloat((entry.suhu.reduce((a, b) => a + b, 0) / entry.suhu.length).toFixed(2)),
+    }))
+    .filter(item => 
+        typeof item.timestamp === 'string' && item.timestamp.includes(searchPompa)
+    )
+    .reverse();
 
-    const filteredPompaData = pompaHistory
-    .filter(item =>
-        item.timestamp.slice(0, 10).includes(searchPompa) || // Change here to filter by first 10 characters of timestamp
-        item.status.toString().includes(searchPompa)
-    );
 
-    filteredPompaData.reverse();
+
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -439,19 +976,19 @@ export default function Grafik() {
 
     const Pagination = ({ totalPages, currentPage, setCurrentPage }) => {
         const pageButtons = [];
-        const maxButtons = 5; // Maximum number of pagination buttons to display
+        const maxButtons = 5; 
     
-        // Calculate start and end page buttons to display
+       
         let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
         let endPage = Math.min(totalPages, startPage + maxButtons - 1);
     
-        // Adjust startPage and endPage if there are not enough buttons
+        
         if (endPage - startPage + 1 < maxButtons) {
             endPage = Math.min(totalPages, startPage + maxButtons - 1);
             startPage = Math.max(1, endPage - maxButtons + 1);
         }
     
-        // Generate page buttons
+        
         for (let i = startPage; i <= endPage; i++) {
             pageButtons.push(
                 <button
@@ -637,8 +1174,33 @@ export default function Grafik() {
                         <div style={{ textAlign: 'center' }}>
                         <h5>pH Terakhir:</h5>
                         <p style={{ fontWeight: 'bold' }}>
-                            {phData2.datasets[0].data.length > 0 ? phData2.datasets[0].data[phData2.datasets[0].data.length - 1] : 'Data tidak tersedia'}
+                            {phData2.datasets[0].data.length > 0 
+                                ? phData2.datasets[0].data[phData2.datasets[0].data.length - 1].toFixed(2) 
+                                : 'Data tidak tersedia'
+                            }
                         </p>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px'}}>
+                            <h5>Status pH:</h5>
+                            <p style={{ 
+                                fontWeight: 'bold',
+                                color: phData2.datasets[0].data.length > 0 
+                                    ? (phData2.datasets[0].data[phData2.datasets[0].data.length - 1] < 5.5 
+                                        ? 'red' 
+                                        : phData2.datasets[0].data[phData2.datasets[0].data.length - 1] > 6.5 
+                                            ? 'red' 
+                                            : 'green') 
+                                    : 'black'
+                                }}>
+                                {phData2.datasets[0].data.length > 0 
+                                    ? phData2.datasets[0].data[phData2.datasets[0].data.length - 1] < 5.5 
+                                        ? 'pH Terlalu Rendah' 
+                                        : phData2.datasets[0].data[phData2.datasets[0].data.length - 1] > 6.5 
+                                            ? 'pH Terlalu Tinggi' 
+                                            : 'Cukup' 
+                                    : 'Data tidak tersedia'
+                                }
+                            </p>
+                        </div>
                         </div>
                     </div>
                     <div className="chart">
@@ -647,7 +1209,10 @@ export default function Grafik() {
                         <div style={{ textAlign: 'center' }}>
                         <h5>Kelembapan Terakhir:</h5>
                         <p style={{ fontWeight: 'bold' }}>
-                            {kelembapanData2.datasets[0].data.length > 0 ? kelembapanData2.datasets[0].data[kelembapanData2.datasets[0].data.length - 1] : 'Data tidak tersedia'}
+                            {kelembapanData2.datasets[0].data.length > 0 
+                                ? kelembapanData2.datasets[0].data[kelembapanData2.datasets[0].data.length - 1].toFixed(2) 
+                                : 'Data tidak tersedia'
+                            }
                         </p>
                         </div>
                     </div>
@@ -657,8 +1222,110 @@ export default function Grafik() {
                         <div style={{ textAlign: 'center' }}>
                         <h5>Suhu Terakhir:</h5>
                         <p style={{ fontWeight: 'bold' }}>
-                            {suhuData2.datasets[0].data.length > 0 ? suhuData2.datasets[0].data[suhuData2.datasets[0].data.length - 1] : 'Data tidak tersedia'}
+                            {suhuData2.datasets[0].data.length > 0 ? suhuData2.datasets[0].data[suhuData2.datasets[0].data.length - 1].toFixed(2) : 'Data tidak tersedia'}
                         </p>
+                        </div>
+                    </div>
+                    <div className="chart">
+                        <h4>Nitrogen</h4>
+                        <Line data={nitrogenData2} options={nitrogenOptions} style={{ width: '100%', height: '300px' }} />
+                        <div style={{ textAlign: 'center' }}>
+                        <h5>Nitrogen Terakhir:</h5>
+                        <p style={{ fontWeight: 'bold' }}>
+                            {nitrogenData2.datasets[0].data.length > 0 
+                                ? nitrogenData2.datasets[0].data[nitrogenData2.datasets[0].data.length - 1].toFixed(2) 
+                                : 'Data tidak tersedia'
+                            }
+                        </p>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px'}}>
+                            <h5>Status Nitrogen:</h5>
+                            <p style={{ 
+                                fontWeight: 'bold',
+                                color: nitrogenData2.datasets[0].data.length > 0 
+                                    ? (nitrogenData2.datasets[0].data[nitrogenData2.datasets[0].data.length - 1] < 150 
+                                        ? 'red' 
+                                        : nitrogenData2.datasets[0].data[nitrogenData2.datasets[0].data.length - 1] >= 150 
+                                            ? 'green' 
+                                            : 'green') 
+                                    : 'black'
+                                }}>
+                                {nitrogenData2.datasets[0].data.length > 0 
+                                    ? nitrogenData2.datasets[0].data[nitrogenData2.datasets[0].data.length - 1] < 150  
+                                        ? 'Nitrogen Terlalu Rendah' 
+                                        : nitrogenData2.datasets[0].data[nitrogenData2.datasets[0].data.length - 1] >= 150 
+                                            ? 'Nitrogen Cukup' 
+                                            : 'Cukup' 
+                                    : 'Data tidak tersedia'
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div className="chart">
+                        <h4>Fosfor</h4>
+                        <Line data={fosforData2} options={fosforOptions} style={{ width: '100%', height: '300px' }} />
+                        <div style={{ textAlign: 'center' }}>
+                        <h5>Fosfor Terakhir:</h5>
+                        <p style={{ fontWeight: 'bold' }}>
+                            {fosforData2.datasets[0].data.length > 0 
+                                ? fosforData2.datasets[0].data[fosforData2.datasets[0].data.length - 1].toFixed(2) 
+                                : 'Data tidak tersedia'
+                            }
+                        </p>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px'}}>
+                            <h5>Status Fosfor:</h5>
+                            <p style={{ 
+                                fontWeight: 'bold',
+                                color: fosforData2.datasets[0].data.length > 0 
+                                    ? (fosforData2.datasets[0].data[fosforData2.datasets[0].data.length - 1] < 50 
+                                        ? 'red' 
+                                        : fosforData2.datasets[0].data[fosforData2.datasets[0].data.length - 1] >= 50 
+                                            ? 'green' 
+                                            : 'green') 
+                                    : 'black'
+                                }}>
+                                {fosforData2.datasets[0].data.length > 0 
+                                    ? fosforData2.datasets[0].data[fosforData2.datasets[0].data.length - 1] < 150  
+                                        ? 'Fosfor Terlalu Rendah' 
+                                        : fosforData2.datasets[0].data[fosforData2.datasets[0].data.length - 1] >= 150 
+                                            ? 'Fosfor Cukup' 
+                                            : 'Cukup' 
+                                    : 'Data tidak tersedia'
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div className="chart">
+                        <h4>Kalium</h4>
+                        <Line data={kaliumData2} options={kaliumOptions} style={{ width: '100%', height: '300px' }} />
+                        <div style={{ textAlign: 'center' }}>
+                            <h5>Kalium Terakhir:</h5>
+                            <p style={{ fontWeight: 'bold' }}>
+                                {kaliumData2.datasets[0].data.length > 0 ? kaliumData2.datasets[0].data[kaliumData2.datasets[0].data.length - 1].toFixed(2) : 'Data tidak tersedia'}
+                            </p>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px'}}>
+                            <h5>Status Kalium:</h5>
+                            <p style={{ 
+                                fontWeight: 'bold',
+                                color: kaliumData2.datasets[0].data.length > 0 
+                                    ? (kaliumData2.datasets[0].data[kaliumData2.datasets[0].data.length - 1] < 150 
+                                        ? 'red' 
+                                        : kaliumData2.datasets[0].data[kaliumData2.datasets[0].data.length - 1] >= 150 
+                                            ? 'green' 
+                                            : 'green') 
+                                    : 'black'
+                                }}>
+                                {kaliumData2.datasets[0].data.length > 0 
+                                    ? kaliumData2.datasets[0].data[kaliumData2.datasets[0].data.length - 1] < 150  
+                                        ? 'Kalium Terlalu Rendah' 
+                                        : kaliumData2.datasets[0].data[kaliumData2.datasets[0].data.length - 1] >= 150 
+                                            ? 'Kalium Cukup' 
+                                            : 'Cukup' 
+                                    : 'Data tidak tersedia'
+                                }
+                            </p>
                         </div>
                     </div>
                     </div>
@@ -688,8 +1355,9 @@ export default function Grafik() {
                             <tr style={{ backgroundColor: '#39A7FF', color: ' white' }}>
                                 <th>Waktu</th>
                                 <th>pH</th>
-                                <th>Kelembapan</th>
-                                <th>Suhu</th>
+                                <th>Nitrogen</th>
+                                <th>Fosfor</th>
+                                <th>Kalium</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -697,8 +1365,9 @@ export default function Grafik() {
                                 <tr key={index}>
                                     <td>{item.timestamp}</td>
                                     <td>{item.ph}</td>
-                                    <td>{item.kelembapan}</td>
-                                    <td>{item.suhu}</td>
+                                    <td>{item.nitrogen}</td>
+                                    <td>{item.fosfor}</td>
+                                    <td>{item.kalium}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -728,9 +1397,11 @@ export default function Grafik() {
                     />
                     <table border="1" style={{ width: '100%', textAlign: 'center' }}>
                         <thead>
-                            <tr style={{ backgroundColor: '#39A7FF', color: ' white' }}>
+                            <tr style={{ backgroundColor: '#39A7FF', color: 'white' }}>
                                 <th>Waktu</th>
-                                <th>Status</th>
+                                <th>Status Pompa</th>
+                                <th>Kelembapan</th>
+                                <th>Suhu</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -738,12 +1409,15 @@ export default function Grafik() {
                                 <tr key={index}>
                                     <td>{item.timestamp}</td>
                                     <td><PompaStatus data={item.status} /></td>
+                                    <td>{item.kelembapan}</td> {/* Tambahkan kolom kelembapan */}
+                                    <td>{item.suhu}</td> {/* Tambahkan kolom suhu */}
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                     <PompaPagination totalPages={totalPagesPompa} currentPage={currentPagePompa} setCurrentPage={setCurrentPagePompa} />
                 </div>
+
             </div>
         </div>
     );
